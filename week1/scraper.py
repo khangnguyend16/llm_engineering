@@ -25,6 +25,13 @@ def fetch_website_contents(url):
     return (title + "\n\n" + text)[:2_000]
 
 
+def fetch_via_jina(url):
+    # Thêm r.jina.ai trước URL để mượn server của họ vượt rào
+    headers = {"X-Return-Format": "markdown"}
+    response = requests.get(f"https://r.jina.ai/{url}", headers=headers)
+    return response.text[:2000]
+
+
 def fetch_website_links(url):
     """
     Return the links on the webiste at the given url
