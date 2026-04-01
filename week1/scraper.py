@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+from urllib.parse import urljoin
 
 
 # Standard headers to fetch a website
@@ -33,12 +34,27 @@ def fetch_via_jina(url):
 
 
 def fetch_website_links(url):
-    """
-    Return the links on the webiste at the given url
-    I realize this is inefficient as we're parsing twice! This is to keep the code in the lab simple.
-    Feel free to use a class and optimize it!
-    """
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, "html.parser")
-    links = [link.get("href") for link in soup.find_all("a")]
-    return [link for link in links if link]
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        # Kiểm tra nếu request thành công
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Sử dụng set để loại bỏ link trùng lặp
+        links = set()
+        for tag in soup.find_all("a", href=True):
+            href = tag.get("href")
+            # Chuyển link tương đối thành link tuyệt đối
+            full_url = urljoin(url, href)
+            links.add(full_url)
+
+        return list(links)
+
+    except requests.exceptions.RequestException as e:
+        print(f"Lỗi rồi: {e}")
+        return []
